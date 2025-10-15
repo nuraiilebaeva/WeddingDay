@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Артем и Екатерина - 7 ноября 2025</title>
+    <title>Владислав и Екатерина - 7 ноября 2025</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <style>
@@ -16,7 +16,7 @@
 
         body {
             font-family: 'Georgia', serif;
-            background: linear-gradient(135deg, #D5F3FE 0%, #89bff8 100%);
+            background: linear-gradient(135deg, #f5e6e8 0%, #E1A6AB 100%);
             min-height: 100vh;
             padding: 0;
             overflow-x: hidden;
@@ -26,7 +26,7 @@
             max-width: 100%;
             margin: 0 auto;
             background: white;
-            box-shadow: 0 0 40px rgba(64, 134, 140, 0.2);
+            box-shadow: 0 0 40px rgba(225, 166, 171, 0.3);
             animation: fadeIn 1s ease-in;
         }
 
@@ -36,7 +36,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #40868c 0%, #408ee0 100%);
+            background: linear-gradient(135deg, #E1A6AB 0%, #d89095 100%);
             padding: 50px 20px;
             text-align: center;
             color: white;
@@ -92,11 +92,11 @@
         }
 
         .details {
-            background: linear-gradient(135deg, #D5F3FE 0%, #ffffff 100%);
+            background: linear-gradient(135deg, #f5e6e8 0%, #ffffff 100%);
             padding: 30px 20px;
             border-radius: 15px;
             margin: 25px 0;
-            border-left: 4px solid #40868c;
+            border-left: 4px solid #E1A6AB;
         }
 
         .detail-item {
@@ -109,7 +109,7 @@
         .detail-icon {
             width: 55px;
             height: 55px;
-            background: linear-gradient(135deg, #40868c, #408ee0);
+            background: linear-gradient(135deg, #E1A6AB, #d89095);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -126,7 +126,7 @@
 
         .detail-label {
             font-weight: bold;
-            color: #40868c;
+            color: #E1A6AB;
             font-size: 15px;
             margin-bottom: 5px;
         }
@@ -146,7 +146,7 @@
 
         .map-button {
             display: block;
-            background: linear-gradient(135deg, #40868c, #408ee0);
+            background: linear-gradient(135deg, #E1A6AB, #d89095);
             color: white;
             padding: 18px 30px;
             border-radius: 50px;
@@ -157,7 +157,7 @@
             width: 100%;
             max-width: 300px;
             transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(64, 134, 140, 0.3);
+            box-shadow: 0 4px 15px rgba(225, 166, 171, 0.4);
             font-weight: 500;
         }
 
@@ -165,51 +165,10 @@
             transform: scale(0.98);
         }
 
-        .dresscode {
-            text-align: center;
-            padding: 30px 20px;
-            background: white;
-            border-radius: 15px;
-            margin: 25px 0;
-        }
-
-        .dresscode h3 {
-            color: #40868c;
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-
-        .dresscode-text {
-            margin-bottom: 25px;
-            color: #555;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-
-        .color-palette {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            padding: 10px;
-        }
-
-        .color-circle {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
-        }
-
-        .color-circle:active {
-            transform: scale(0.95);
-        }
-
         .footer {
             text-align: center;
             padding: 40px 20px;
-            background: linear-gradient(135deg, #40868c 0%, #408ee0 100%);
+            background: linear-gradient(135deg, #E1A6AB 0%, #d89095 100%);
             color: white;
             font-size: 17px;
             font-style: italic;
@@ -238,11 +197,6 @@
                 width: 50px;
                 height: 50px;
                 font-size: 24px;
-            }
-
-            .color-circle {
-                width: 60px;
-                height: 60px;
             }
 
             #map {
@@ -286,7 +240,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="names">Артем & Екатерина</div>
+            <div class="names">Владислав & Екатерина</div>
             <div class="tagline">Два сердца — одна судьба</div>
         </div>
 
@@ -328,17 +282,6 @@
             <a href="https://2gis.kg/bishkek/firm/70000001047984986?m=74.596991%2C42.872611%2F16" target="_blank" class="map-button">
                 📍 Открыть в 2GIS
             </a>
-
-            <div class="dresscode">
-                <h3>Дресс-код</h3>
-                <div class="dresscode-text">Мы будем рады видеть вас в оттенках бирюзового и голубого</div>
-                <div class="color-palette">
-                    <div class="color-circle" style="background-color: #40868c;"></div>
-                    <div class="color-circle" style="background-color: #408ee0;"></div>
-                    <div class="color-circle" style="background-color: #89bff8;"></div>
-                    <div class="color-circle" style="background-color: #D5F3FE;"></div>
-                </div>
-            </div>
         </div>
 
         <div class="footer">
@@ -368,7 +311,7 @@
         // Создание красивой иконки
         const customIcon = L.divIcon({
             className: 'custom-marker',
-            html: '<div style="background: linear-gradient(135deg, #40868c, #408ee0); width: 45px; height: 45px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 3px solid white;"><div style="width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(45deg);"></div></div>',
+            html: '<div style="background: linear-gradient(135deg, #E1A6AB, #d89095); width: 45px; height: 45px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 3px solid white;"><div style="width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(45deg);"></div></div>',
             iconSize: [45, 45],
             iconAnchor: [22, 45]
         });
