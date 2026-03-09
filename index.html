@@ -1,386 +1,699 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Владислав и Екатерина - 7 ноября 2025</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Солнечная система</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #03060f;
+      --panel: rgba(8,18,40,0.85);
+      --border: rgba(79,195,247,0.18);
+      --accent: #4fc3f7;
+      --gold: #ffd54f;
+      --text: #ddeeff;
+      --muted: rgba(200,220,255,0.4);
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-        body {
-            font-family: 'Georgia', serif;
-            background: linear-gradient(135deg, #f5e6e8 0%, #E1A6AB 100%);
-            min-height: 100vh;
-            padding: 0;
-            overflow-x: hidden;
-        }
+    html { scroll-behavior: smooth; }
 
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            background: white;
-            box-shadow: 0 0 40px rgba(225, 166, 171, 0.3);
-            animation: fadeIn 1s ease-in;
-        }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Exo 2', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    /* ── STARS ── */
+    #stars {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0;
+    }
 
-        .header {
-            background: linear-gradient(135deg, #E1A6AB 0%, #d89095 100%);
-            padding: 50px 20px;
-            text-align: center;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
+    /* ── PAGES ── */
+    /* Page 1: QR grid */
+    #page-qr {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      padding: 0 0 80px;
+    }
 
-        .header::before {
-            content: '♥';
-            position: absolute;
-            font-size: 150px;
-            opacity: 0.1;
-            top: -30px;
-            right: -30px;
-            animation: heartbeat 2s infinite;
-        }
+    /* Page 2+: planet detail */
+    .planet-page {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px;
+      scroll-margin-top: 0;
+    }
 
-        @keyframes heartbeat {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
+    /* ── HEADER ── */
+    .site-header {
+      text-align: center;
+      padding: 56px 20px 44px;
+    }
+    .site-header h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.6rem, 5vw, 3.2rem);
+      font-weight: 900;
+      letter-spacing: .12em;
+      background: linear-gradient(120deg, #fff 0%, var(--accent) 55%, var(--gold) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .site-header p {
+      margin-top: 10px;
+      font-size: clamp(.75rem, 2vw, .9rem);
+      color: var(--muted);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      font-weight: 300;
+    }
 
-        .names {
-            font-size: 42px;
-            font-weight: 300;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-            line-height: 1.3;
-        }
+    /* ── QR GRID ── */
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 22px;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
 
-        .tagline {
-            font-size: 18px;
-            font-style: italic;
-            opacity: 0.95;
-            letter-spacing: 0.5px;
-        }
+    @media (max-width: 600px) {
+      .qr-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        padding: 0 16px;
+      }
+    }
+    @media (max-width: 340px) {
+      .qr-grid { grid-template-columns: 1fr; }
+    }
 
-        .content {
-            padding: 30px 20px;
-        }
+    .planet-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 14px 14px;
+      cursor: pointer;
+      transition: transform .28s ease, border-color .28s ease, box-shadow .28s ease;
+      backdrop-filter: blur(10px);
+      text-decoration: none;
+      display: block;
+      color: inherit;
+    }
+    .planet-card:hover, .planet-card:focus-visible {
+      transform: translateY(-5px) scale(1.02);
+      border-color: var(--accent);
+      box-shadow: 0 0 28px rgba(79,195,247,.22), 0 18px 36px rgba(0,0,0,.4);
+      outline: none;
+    }
 
-        .invitation-text {
-            text-align: center;
-            font-size: 17px;
-            line-height: 1.7;
-            color: #333;
-            margin-bottom: 30px;
-        }
+    .card-name-ru {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(.6rem, 1.8vw, .72rem);
+      font-weight: 700;
+      letter-spacing: .14em;
+      color: var(--accent);
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-name-en {
+      font-size: .62rem;
+      color: var(--muted);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
 
-        .invitation-text p {
-            margin-bottom: 15px;
-        }
+    .qr-box {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .qr-box canvas, .qr-box img {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
 
-        .details {
-            background: linear-gradient(135deg, #f5e6e8 0%, #ffffff 100%);
-            padding: 30px 20px;
-            border-radius: 15px;
-            margin: 25px 0;
-            border-left: 4px solid #E1A6AB;
-        }
+    /* hover label */
+    .card-hint {
+      margin-top: 10px;
+      font-size: .62rem;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: .06em;
+      display: none;
+    }
+    @media (hover: none) { .card-hint { display: block; } }
 
-        .detail-item {
-            display: flex;
-            align-items: center;
-            margin: 20px 0;
-            font-size: 17px;
-        }
+    /* ── TOOLTIP (desktop hover) ── */
+    #tooltip {
+      position: fixed; z-index: 9999;
+      width: min(340px, 90vw);
+      background: linear-gradient(160deg, rgba(2,15,38,.97), rgba(4,12,28,.99));
+      border: 1px solid rgba(79,195,247,.38);
+      border-radius: 18px;
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(.92) translateY(10px);
+      transition: opacity .22s ease, transform .22s ease;
+      box-shadow: 0 0 48px rgba(79,195,247,.18), 0 28px 56px rgba(0,0,0,.6);
+      overflow: hidden;
+    }
+    #tooltip.show { opacity: 1; transform: scale(1) translateY(0); }
 
-        .detail-icon {
-            width: 55px;
-            height: 55px;
-            background: linear-gradient(135deg, #E1A6AB, #d89095);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            font-size: 26px;
-            color: white;
-            flex-shrink: 0;
-        }
+    #tt-svg { width: 100%; height: 190px; display: block; border-bottom: 1px solid rgba(79,195,247,.12); }
 
-        .detail-content {
-            flex: 1;
-        }
+    .tt-body { padding: 18px 20px 20px; }
+    .tt-ru {
+      font-family: 'Orbitron', monospace;
+      font-size: 1rem; font-weight: 700;
+      color: #fff; letter-spacing: .08em;
+    }
+    .tt-en { font-size: .68rem; color: var(--accent); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 10px; opacity: .7; }
+    .tt-desc { font-size: .78rem; line-height: 1.62; color: rgba(220,235,255,.72); font-weight: 300; }
+    .tt-meta {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 12px; padding-top: 12px;
+      border-top: 1px solid rgba(79,195,247,.1);
+    }
+    .tt-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .tt-orbit { font-size: .65rem; color: var(--muted); letter-spacing: .08em; }
 
-        .detail-label {
-            font-weight: bold;
-            color: #E1A6AB;
-            font-size: 15px;
-            margin-bottom: 5px;
-        }
+    /* ── PLANET DETAIL PAGES ── */
+    .planet-page {
+      border-top: 1px solid rgba(79,195,247,.08);
+    }
+    .detail-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      max-width: 960px;
+      width: 100%;
+      align-items: center;
+    }
+    @media (max-width: 720px) {
+      .detail-inner {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        text-align: center;
+      }
+    }
 
-        .detail-value {
-            font-size: 18px;
-            color: #333;
-        }
+    .detail-canvas-wrap {
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      overflow: visible;
+    }
+    .detail-canvas-wrap svg { width: 100%; height: 100%; }
 
-        #map {
-            height: 350px;
-            border-radius: 15px;
-            margin: 25px 0;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-            touch-action: pan-y;
-        }
+    .detail-info {}
+    .detail-name-ru {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.4rem, 4vw, 2.4rem);
+      font-weight: 900;
+      letter-spacing: .1em;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+    .detail-name-en {
+      font-size: clamp(.75rem, 2vw, .9rem);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      opacity: .65;
+      margin-bottom: 20px;
+    }
+    .detail-desc {
+      font-size: clamp(.82rem, 2vw, .95rem);
+      line-height: 1.72;
+      color: rgba(220,238,255,.72);
+      font-weight: 300;
+      font-style: italic;
+    }
+    .detail-orbit {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 20px;
+      padding: 7px 14px;
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      font-size: .7rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .detail-orbit-dot { width: 8px; height: 8px; border-radius: 50%; }
 
-        .map-button {
-            display: block;
-            background: linear-gradient(135deg, #E1A6AB, #d89095);
-            color: white;
-            padding: 18px 30px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-size: 18px;
-            margin: 20px auto;
-            text-align: center;
-            width: 100%;
-            max-width: 300px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(225, 166, 171, 0.4);
-            font-weight: 500;
-        }
+    /* back button */
+    .back-btn {
+      position: absolute;
+      top: 24px; left: 24px;
+      font-family: 'Orbitron', monospace;
+      font-size: .65rem;
+      letter-spacing: .12em;
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: 40px;
+      transition: border-color .2s, background .2s;
+    }
+    .back-btn:hover { border-color: var(--accent); background: rgba(79,195,247,.08); }
 
-        .map-button:active {
-            transform: scale(0.98);
-        }
+    /* divider */
+    .divider {
+      position: relative; z-index: 1;
+      max-width: 960px; margin: 0 auto;
+      border: none; border-top: 1px solid rgba(79,195,247,.07);
+    }
 
-        .rsvp-section {
-            text-align: center;
-            padding: 35px 20px;
-            background: linear-gradient(135deg, #f5e6e8 0%, #ffffff 100%);
-            border-radius: 15px;
-            margin: 30px 0;
-            border: 2px solid #E1A6AB;
-        }
-
-        .rsvp-section h3 {
-            color: #E1A6AB;
-            font-size: 26px;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
-
-        .rsvp-section p {
-            color: #666;
-            font-size: 16px;
-            margin-bottom: 25px;
-        }
-
-        .rsvp-button {
-            display: inline-block;
-            background: linear-gradient(135deg, #E1A6AB, #d89095);
-            color: white;
-            padding: 18px 45px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-size: 19px;
-            font-weight: 600;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 6px 20px rgba(225, 166, 171, 0.4);
-        }
-
-        .rsvp-button:active {
-            transform: scale(0.98);
-        }
-
-        .footer {
-            text-align: center;
-            padding: 40px 20px;
-            background: linear-gradient(135deg, #E1A6AB 0%, #d89095 100%);
-            color: white;
-            font-size: 17px;
-            font-style: italic;
-            line-height: 1.6;
-        }
-
-        /* Оптимизация для очень маленьких экранов */
-        @media (max-width: 380px) {
-            .names {
-                font-size: 36px;
-            }
-
-            .tagline {
-                font-size: 16px;
-            }
-
-            .invitation-text {
-                font-size: 16px;
-            }
-
-            .detail-item {
-                font-size: 16px;
-            }
-
-            .detail-icon {
-                width: 50px;
-                height: 50px;
-                font-size: 24px;
-            }
-
-            #map {
-                height: 300px;
-            }
-        }
-
-        /* Для планшетов */
-        @media (min-width: 768px) {
-            .container {
-                max-width: 700px;
-                margin: 20px auto;
-                border-radius: 30px;
-            }
-
-            .content {
-                padding: 40px 30px;
-            }
-
-            .header {
-                border-radius: 30px 30px 0 0;
-            }
-
-            #map {
-                height: 400px;
-            }
-        }
-
-        /* Убираем zoom controls на мобильных */
-        .leaflet-control-zoom {
-            display: none !important;
-        }
-
-        @media (min-width: 768px) {
-            .leaflet-control-zoom {
-                display: block !important;
-            }
-        }
-    </style>
+    /* ── SCROLL HINT ── */
+    .scroll-hint {
+      display: none;
+      position: relative; z-index: 1;
+      text-align: center;
+      padding-bottom: 32px;
+      font-size: .65rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    @media (hover: none) { .scroll-hint { display: block; } }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="names">Владислав & Екатерина</div>
-            <div class="tagline">Два сердца — одна судьба</div>
-        </div>
 
-        <div class="content">
-            <div class="invitation-text">
-                <p>Дорогие друзья и близкие!</p>
-                <p>Мы рады сообщить вам, что решили соединить наши жизни узами брака. Для нас это особенный день, наполненный любовью, радостью и надеждой на прекрасное будущее.</p>
-                <p>Для нас будет большой честью разделить этот волшебный момент с вами — теми, кто дорог нашим сердцам.</p>
-                <p><strong>Приглашаем вас стать свидетелями нашего счастья!</strong></p>
-            </div>
+<canvas id="stars"></canvas>
 
-            <div class="details">
-                <div class="detail-item">
-                    <div class="detail-icon">📅</div>
-                    <div class="detail-content">
-                        <div class="detail-label">Дата</div>
-                        <div class="detail-value">7 ноября 2025 года</div>
-                    </div>
-                </div>
+<!-- ═══════════════════ PAGE 1 — QR GRID ═══════════════════ -->
+<div id="page-qr">
+  <header class="site-header">
+    <h1>☀ SOLAR SYSTEM</h1>
+    <p>Солнечная система — наведи на QR-код</p>
+  </header>
 
-                <div class="detail-item">
-                    <div class="detail-icon">🕐</div>
-                    <div class="detail-content">
-                        <div class="detail-label">Время</div>
-                        <div class="detail-value">17:00</div>
-                    </div>
-                </div>
+  <div class="qr-grid" id="qr-grid"></div>
 
-                <div class="detail-item">
-                    <div class="detail-icon">📍</div>
-                    <div class="detail-content">
-                        <div class="detail-label">Место проведения</div>
-                        <div class="detail-value">Bellagio Premium</div>
-                    </div>
-                </div>
-            </div>
+  <p class="scroll-hint" style="margin-top:20px">↓ Нажми на карточку, чтобы узнать о планете</p>
+</div>
 
-            <div id="map"></div>
-            <a href="https://2gis.kg/bishkek/firm/70000001047984986?m=74.596991%2C42.872611%2F16" target="_blank" class="map-button">
-                📍 Открыть в 2GIS
-            </a>
+<!-- ═══════════════════ PAGE 2+ — DETAIL PAGES ═══════════════════ -->
+<div id="detail-pages"></div>
 
-            <div class="rsvp-section">
-                <h3>Подтвердите ваше присутствие</h3>
-                <p>Пожалуйста, сообщите нам о вашем решении до 1 ноября 2025г.</p>
-                <a href="https://forms.gle/ndb3P2ZXJD9pb2Xb9" target="_blank" class="rsvp-button">
-                    ✓ Подтвердить присутствие
-                </a>
-            </div>
-        </div>
-
-        <div class="footer">
-            С любовью и нетерпением ждем<br>встречи с вами! ♥
-        </div>
+<!-- TOOLTIP (desktop) -->
+<div id="tooltip">
+  <svg id="tt-svg"></svg>
+  <div class="tt-body">
+    <div class="tt-ru" id="tt-ru"></div>
+    <div class="tt-en" id="tt-en"></div>
+    <div class="tt-desc" id="tt-desc"></div>
+    <div class="tt-meta">
+      <div class="tt-dot" id="tt-dot"></div>
+      <div class="tt-orbit" id="tt-orbit"></div>
     </div>
+  </div>
+</div>
 
-    <script>
-        // Инициализация карты с отключенным zoom для мобильных
-        const isMobile = window.innerWidth < 768;
-        
-        const map = L.map('map', {
-            center: [42.872611, 74.596991],
-            zoom: 16,
-            zoomControl: !isMobile,
-            dragging: true,
-            touchZoom: true,
-            scrollWheelZoom: false,
-            doubleClickZoom: true,
-            tap: true
-        });
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+<script>
+/* ─────────────────────────────────────────
+   DATA
+───────────────────────────────────────── */
+const BASE_URL = window.location.href.split('#')[0];
 
-        // Создание красивой иконки
-        const customIcon = L.divIcon({
-            className: 'custom-marker',
-            html: '<div style="background: linear-gradient(135deg, #E1A6AB, #d89095); width: 45px; height: 45px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 3px solid white;"><div style="width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(45deg);"></div></div>',
-            iconSize: [45, 45],
-            iconAnchor: [22, 45]
-        });
+const PLANETS = [
+  { id:'sun',     ru:'Солнце',   en:'Sun',     color:'#FDB813', glow:'#ff9800', rings:false, orbitPos:'Центр системы',        style:'star',   desc:'Солнце — звезда в центре Солнечной системы. Оно даёт Земле свет и тепло, благодаря чему существует жизнь. Состоит из горячих газов — водорода и гелия. Температура поверхности ~5 500 °C.' },
+  { id:'mercury', ru:'Меркурий', en:'Mercury', color:'#9E9E9E', glow:'#bdbdbd', rings:false, orbitPos:'1-я планета от Солнца', style:'rocky',  desc:'Меркурий — самая маленькая и ближайшая к Солнцу планета. Поверхность покрыта кратерами, как Луна. Огромные перепады температур: днём +430 °C, ночью −180 °C.' },
+  { id:'venus',   ru:'Венера',   en:'Venus',   color:'#E8C07D', glow:'#ffcc02', rings:false, orbitPos:'2-я планета от Солнца', style:'cloud',  desc:'Венера — «сестра Земли» по размеру, но с плотной атмосферой и сильным парниковым эффектом. Самая горячая планета — температура достигает +460 °C.' },
+  { id:'earth',   ru:'Земля',    en:'Earth',   color:'#4FC3F7', glow:'#29b6f6', rings:false, orbitPos:'3-я планета от Солнца', style:'ocean',  desc:'Земля — единственная планета с жизнью. Океаны, материки, кислородная атмосфера. Один спутник — Луна.' },
+  { id:'mars',    ru:'Марс',     en:'Mars',    color:'#E64A19', glow:'#ff5722', rings:false, orbitPos:'4-я планета от Солнца', style:'desert', desc:'«Красная планета» из-за железной пыли. Здесь самые большие вулканы и каньоны в системе. Учёные активно ищут признаки жизни.' },
+  { id:'jupiter', ru:'Юпитер',   en:'Jupiter', color:'#D4A574', glow:'#ff8f00', rings:false, orbitPos:'5-я планета от Солнца', style:'gas',    desc:'Самая большая планета — газовый гигант из водорода и гелия. Знаменито Большое красное пятно — гигантский шторм размером с Землю.' },
+  { id:'saturn',  ru:'Сатурн',   en:'Saturn',  color:'#F5DEB3', glow:'#ffcc80', rings:true,  orbitPos:'6-я планета от Солнца', style:'rings',  desc:'Второй по величине газовый гигант. Известен яркими кольцами изо льда, камней и пыли. Имеет множество спутников.' },
+  { id:'uranus',  ru:'Уран',     en:'Uranus',  color:'#80DEEA', glow:'#4dd0e1', rings:true,  orbitPos:'7-я планета от Солнца', style:'ice',    desc:'Ледяной гигант голубовато-зелёного цвета. Уникален тем, что ось вращения сильно наклонена — планета «лежит на боку».' },
+  { id:'neptune', ru:'Нептун',   en:'Neptune', color:'#3F51B5', glow:'#5c6bc0', rings:false, orbitPos:'8-я планета от Солнца', style:'deep',   desc:'Самая дальняя планета — холодный синий газовый гигант. Дуют самые сильные ветры в Солнечной системе — до 2 100 км/ч.' },
+];
 
-        // Добавление маркера
-        const marker = L.marker([42.872611, 74.596991], {icon: customIcon})
-            .addTo(map)
-            .bindPopup('<div style="text-align: center; font-size: 16px;"><strong>Bellagio Premium</strong><br>Место проведения свадьбы</div>');
+/* ─────────────────────────────────────────
+   STARFIELD
+───────────────────────────────────────── */
+const starsCvs = document.getElementById('stars');
+const sCtx = starsCvs.getContext('2d');
+let stars = [];
+function initStars(){
+  starsCvs.width = window.innerWidth;
+  starsCvs.height = Math.max(document.body.scrollHeight, window.innerHeight);
+  stars = Array.from({length:260}, ()=>({
+    x: Math.random()*starsCvs.width,
+    y: Math.random()*starsCvs.height,
+    r: Math.random()*1.4+.3,
+    phase: Math.random()*Math.PI*2,
+    speed: Math.random()*.004+.001
+  }));
+}
+function animStars(){
+  sCtx.clearRect(0,0,starsCvs.width,starsCvs.height);
+  stars.forEach(s=>{
+    s.phase+=s.speed;
+    const a = .25 + .55*Math.abs(Math.sin(s.phase));
+    sCtx.beginPath();
+    sCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    sCtx.fillStyle=`rgba(190,215,255,${a})`;
+    sCtx.fill();
+  });
+  requestAnimationFrame(animStars);
+}
+initStars(); animStars();
+window.addEventListener('resize', ()=>{ initStars(); });
 
-        // Автоматически открыть popup на мобильных
-        if (isMobile) {
-            marker.openPopup();
+/* ─────────────────────────────────────────
+   BUILD QR GRID
+───────────────────────────────────────── */
+const grid = document.getElementById('qr-grid');
+
+PLANETS.forEach((p, i)=>{
+  const card = document.createElement('a');
+  card.className = 'planet-card';
+  card.href = `#${p.id}`;
+  card.setAttribute('aria-label', `${p.ru} — подробнее`);
+  card.innerHTML = `
+    <div class="card-name-ru">${p.ru}</div>
+    <div class="card-name-en">${p.en}</div>
+    <div class="qr-box" id="qr-${p.id}"></div>
+    <div class="card-hint">↓ нажми</div>
+  `;
+  grid.appendChild(card);
+
+  // QR points to anchor on THIS page
+  setTimeout(()=>{
+    new QRCode(document.getElementById(`qr-${p.id}`), {
+      text: BASE_URL + '#' + p.id,
+      width: 200, height: 200,
+      colorDark: '#000000', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  }, i * 60);
+
+  // Desktop hover tooltip
+  card.addEventListener('mouseenter', e => showTip(p, e));
+  card.addEventListener('mousemove',  e => moveTip(e));
+  card.addEventListener('mouseleave', hideTip);
+});
+
+/* ─────────────────────────────────────────
+   BUILD DETAIL PAGES
+───────────────────────────────────────── */
+const detailWrap = document.getElementById('detail-pages');
+
+PLANETS.forEach(p => {
+  const section = document.createElement('section');
+  section.className = 'planet-page';
+  section.id = p.id;
+
+  section.innerHTML = `
+    <a class="back-btn" href="#page-qr">← Назад</a>
+    <div class="detail-inner">
+      <div class="detail-canvas-wrap">
+        <svg id="detail-svg-${p.id}" viewBox="0 0 300 300"></svg>
+      </div>
+      <div class="detail-info">
+        <div class="detail-name-ru" style="color:${p.color}">${p.ru}</div>
+        <div class="detail-name-en">${p.en}</div>
+        <p class="detail-desc">${p.desc}</p>
+        <div class="detail-orbit">
+          <div class="detail-orbit-dot" style="background:${p.color};box-shadow:0 0 8px ${p.glow}"></div>
+          ${p.orbitPos}
+        </div>
+      </div>
+    </div>
+  `;
+  detailWrap.appendChild(section);
+});
+
+/* ─────────────────────────────────────────
+   TOOLTIP (desktop)
+───────────────────────────────────────── */
+const tooltip = document.getElementById('tooltip');
+let tipAnim = null;
+
+function showTip(p, e){
+  document.getElementById('tt-ru').textContent = p.ru;
+  document.getElementById('tt-en').textContent = p.en;
+  document.getElementById('tt-desc').textContent = p.desc;
+  document.getElementById('tt-orbit').textContent = p.orbitPos;
+  const dot = document.getElementById('tt-dot');
+  dot.style.background = p.color;
+  dot.style.boxShadow = `0 0 8px ${p.glow}`;
+  drawPlanetSVG('#tt-svg', p, 340, 190, 'tip');
+  tooltip.classList.add('show');
+  moveTip(e);
+}
+function moveTip(e){
+  const tw=tooltip.offsetWidth, th=tooltip.offsetHeight;
+  let x=e.clientX+18, y=e.clientY-th/2;
+  if(x+tw>window.innerWidth-10) x=e.clientX-tw-18;
+  if(y<8) y=8;
+  if(y+th>window.innerHeight-8) y=window.innerHeight-th-8;
+  tooltip.style.left=x+'px';
+  tooltip.style.top=y+'px';
+}
+function hideTip(){ tooltip.classList.remove('show'); if(tipAnim){cancelAnimationFrame(tipAnim);tipAnim=null;} }
+
+/* ─────────────────────────────────────────
+   DRAW PLANET SVG (shared)
+   target = CSS selector | 'tip'
+───────────────────────────────────────── */
+const detailAnims = {}; // store per-planet raf ids
+
+function drawPlanetSVG(selector, p, W, H, key){
+  if(key && detailAnims[key]){ cancelAnimationFrame(detailAnims[key]); }
+
+  const svgEl = typeof selector === 'string' ? document.querySelector(selector) : selector;
+  if(!svgEl) return;
+  const svg = d3.select(svgEl);
+  svg.selectAll('*').remove();
+  svg.attr('viewBox',`0 0 ${W} ${H}`);
+
+  const defs = svg.append('defs');
+  const cx=W/2, cy=H/2;
+
+  // BG glow
+  const bgG = defs.append('radialGradient').attr('id',`bg-${key}`).attr('cx','50%').attr('cy','50%').attr('r','60%');
+  bgG.append('stop').attr('offset','0%').attr('stop-color',p.glow).attr('stop-opacity',.18);
+  bgG.append('stop').attr('offset','100%').attr('stop-color','#000').attr('stop-opacity',0);
+  svg.append('rect').attr('width',W).attr('height',H).attr('fill',`url(#bg-${key})`);
+
+  // micro stars
+  for(let i=0;i<25;i++){
+    svg.append('circle')
+      .attr('cx',Math.random()*W).attr('cy',Math.random()*H)
+      .attr('r',Math.random()*.9+.2)
+      .attr('fill',`rgba(200,220,255,${Math.random()*.5+.15})`);
+  }
+
+  if(p.style==='star'){ animateSun(svg,defs,cx,cy,p,key); }
+  else { animatePlanet(svg,defs,cx,cy,p,W,H,key); }
+}
+
+/* ── SUN ── */
+function animateSun(svg,defs,cx,cy,p,key){
+  const filter = defs.append('filter').attr('id',`glow-${key}`);
+  filter.append('feGaussianBlur').attr('stdDeviation','9').attr('result','blur');
+  const fm=filter.append('feMerge');
+  fm.append('feMergeNode').attr('in','blur');
+  fm.append('feMergeNode').attr('in','SourceGraphic');
+
+  const rg = defs.append('radialGradient').attr('id',`sun-${key}`).attr('cx','38%').attr('cy','32%');
+  rg.append('stop').attr('offset','0%').attr('stop-color','#fff9c4');
+  rg.append('stop').attr('offset','50%').attr('stop-color','#FDB813');
+  rg.append('stop').attr('offset','100%').attr('stop-color','#e65100');
+
+  const RAYS=16;
+  const rays=[];
+  for(let i=0;i<RAYS;i++){
+    rays.push(svg.append('line').attr('stroke',p.glow).attr('stroke-width',1.8).attr('opacity',.45));
+  }
+
+  const halo=svg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',52)
+    .attr('fill',p.glow).attr('opacity',.28).attr('filter',`url(#glow-${key})`);
+  const sun=svg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',40)
+    .attr('fill',`url(#sun-${key})`).attr('filter',`url(#glow-${key})`);
+
+  let t=0;
+  function tick(){
+    t+=.018;
+    const scale=1+.05*Math.sin(t*2.1);
+    sun.attr('r',40*scale);
+    halo.attr('r',54*scale);
+    rays.forEach((r,i)=>{
+      const angle=(i/RAYS)*Math.PI*2+t*.25;
+      const len=58+12*Math.abs(Math.sin(t+i*.7));
+      r.attr('x1',cx+Math.cos(angle)*43).attr('y1',cy+Math.sin(angle)*43)
+       .attr('x2',cx+Math.cos(angle)*len).attr('y2',cy+Math.sin(angle)*len);
+    });
+    detailAnims[key]=requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+/* ── PLANET ── */
+function animatePlanet(svg,defs,cx,cy,p,W,H,key){
+  const R = Math.min(W,H)*0.24;
+
+  // glow filter
+  const filter=defs.append('filter').attr('id',`glow-${key}`);
+  filter.append('feGaussianBlur').attr('stdDeviation','6').attr('result','blur');
+  const fm=filter.append('feMerge');
+  fm.append('feMergeNode').attr('in','blur');
+  fm.append('feMergeNode').attr('in','SourceGraphic');
+
+  // clip
+  const clipId=`clip-${key}`;
+  const clip=defs.append('clipPath').attr('id',clipId);
+  clip.append('circle').attr('cx',cx).attr('cy',cy).attr('r',R);
+
+  // gradient
+  const lighten=(hex,amt)=>{
+    let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+    return `rgb(${Math.min(255,r+amt)},${Math.min(255,g+amt)},${Math.min(255,b+amt)})`;
+  };
+  const pg=defs.append('radialGradient').attr('id',`pg-${key}`).attr('cx','35%').attr('cy','30%');
+  pg.append('stop').attr('offset','0%').attr('stop-color',lighten(p.color,75));
+  pg.append('stop').attr('offset','55%').attr('stop-color',p.color);
+  pg.append('stop').attr('offset','100%').attr('stop-color',lighten(p.color,-65));
+
+  // rings behind
+  if(p.rings){
+    const rg2=defs.append('linearGradient').attr('id',`rg-${key}`).attr('x1','0%').attr('x2','100%');
+    rg2.append('stop').attr('offset','0%').attr('stop-color',p.color).attr('stop-opacity',0);
+    rg2.append('stop').attr('offset','25%').attr('stop-color',p.color).attr('stop-opacity',.55);
+    rg2.append('stop').attr('offset','50%').attr('stop-color',lighten(p.color,40)).attr('stop-opacity',.85);
+    rg2.append('stop').attr('offset','75%').attr('stop-color',p.color).attr('stop-opacity',.55);
+    rg2.append('stop').attr('offset','100%').attr('stop-color',p.color).attr('stop-opacity',0);
+    svg.append('ellipse').attr('cx',cx).attr('cy',cy).attr('rx',R+R*.7).attr('ry',R*.24)
+      .attr('fill','none').attr('stroke',`url(#rg-${key})`).attr('stroke-width',R*.18).attr('opacity',.65);
+    svg.append('ellipse').attr('cx',cx).attr('cy',cy).attr('rx',R+R*.42).attr('ry',R*.14)
+      .attr('fill','none').attr('stroke',`url(#rg-${key})`).attr('stroke-width',R*.08).attr('opacity',.45);
+  }
+
+  // shadow under planet
+  svg.append('circle').attr('cx',cx+3).attr('cy',cy+3).attr('r',R)
+    .attr('fill','rgba(0,0,0,.38)').attr('filter',`url(#glow-${key})`);
+
+  // planet body
+  const planet=svg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',R)
+    .attr('fill',`url(#pg-${key})`);
+
+  // surface details
+  const sg=svg.append('g').attr('clip-path',`url(#${clipId})`);
+  addSurface(sg,cx,cy,R,p);
+
+  // atmosphere rim
+  svg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',R)
+    .attr('fill','none').attr('stroke',lighten(p.color,60)).attr('stroke-width',R*.06).attr('opacity',.18);
+
+  let t=0;
+  function tick(){
+    t+=.012;
+    planet.attr('r', R+.8*Math.sin(t*1.8));
+    detailAnims[key]=requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+function addSurface(g,cx,cy,R,p){
+  const lighten=(hex,amt)=>{
+    let r=parseInt(hex.slice(1,3),16),gg=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+    return `rgb(${Math.min(255,r+amt)},${Math.min(255,gg+amt)},${Math.min(255,b+amt)})`;
+  };
+  if(p.style==='ocean'){
+    g.append('ellipse').attr('cx',cx-R*.22).attr('cy',cy-.1*R).attr('rx',R*.28).attr('ry',R*.35).attr('fill','#4CAF50').attr('opacity',.72);
+    g.append('ellipse').attr('cx',cx+R*.28).attr('cy',cy+.08*R).attr('rx',R*.2).attr('ry',R*.3).attr('fill','#66BB6A').attr('opacity',.62);
+    g.append('ellipse').attr('cx',cx+.08*R).attr('cy',cy-.38*R).attr('rx',R*.22).attr('ry',R*.14).attr('fill','#81C784').attr('opacity',.52);
+    g.append('ellipse').attr('cx',cx-.1*R).attr('cy',cy+.36*R).attr('rx',R*.15).attr('ry',R*.12).attr('fill','#A5D6A7').attr('opacity',.44);
+    g.append('ellipse').attr('cx',cx-.12*R).attr('cy',cy-.5*R).attr('rx',R*.3).attr('ry',R*.09).attr('fill','rgba(255,255,255,.38)');
+    g.append('ellipse').attr('cx',cx+.28*R).attr('cy',cy-.18*R).attr('rx',R*.2).attr('ry',R*.07).attr('fill','rgba(255,255,255,.3)');
+  } else if(p.style==='gas'){
+    [[0,.3],[.22,.25],[-.15,.2],[.08,.25],[-.28,.18]].forEach(([off,op],i)=>{
+      g.append('rect').attr('x',cx-R).attr('y',cy-R+(i+off)*R*.45).attr('width',R*2).attr('height',R*.22)
+        .attr('fill',`rgba(180,110,60,${op})`);
+    });
+    g.append('ellipse').attr('cx',cx+R*.14).attr('cy',cy+R*.1).attr('rx',R*.22).attr('ry',R*.14).attr('fill','rgba(180,55,35,.4)');
+  } else if(p.style==='desert'){
+    [[-.18,.18,R*.16,R*.22],[.26,-.22,R*.14,R*.14]].forEach(([dx,dy,rx,ry])=>{
+      g.append('ellipse').attr('cx',cx+dx*R).attr('cy',cy+dy*R).attr('rx',rx).attr('ry',ry).attr('fill','rgba(160,60,28,.45)');
+    });
+    [[cx+R*.28,cy-.22*R,R*.1],[cx-.36*R,cy-.28*R,R*.08],[cx-.1*R,cy+.32*R,R*.07]].forEach(([x,y,r])=>{
+      g.append('circle').attr('cx',x).attr('cy',y).attr('r',r).attr('fill','rgba(0,0,0,.22)');
+    });
+    g.append('ellipse').attr('cx',cx).attr('cy',cy-R+R*.13).attr('rx',R*.24).attr('ry',R*.1).attr('fill','rgba(240,240,255,.58)');
+  } else if(p.style==='cloud'){
+    for(let i=0;i<5;i++){
+      g.append('ellipse').attr('cx',cx).attr('cy',cy-R+(i/4)*R*2+R*.12)
+        .attr('rx',R).attr('ry',R*.13).attr('fill',`rgba(255,225,140,${.12+i*.04})`);
+    }
+  } else if(p.style==='rocky'){
+    [[-.3,-.18,R*.16],[.22,.1,R*.12],[-.1,.35,R*.1],[.36,-.34,R*.14],[-.35,.1,R*.08]].forEach(([dx,dy,r])=>{
+      g.append('circle').attr('cx',cx+dx*R).attr('cy',cy+dy*R).attr('r',r).attr('fill','rgba(0,0,0,.26)');
+      g.append('circle').attr('cx',cx+dx*R).attr('cy',cy+dy*R).attr('r',r*.55).attr('fill','rgba(0,0,0,.14)');
+    });
+  } else if(p.style==='ice'){
+    for(let i=0;i<4;i++){
+      g.append('rect').attr('x',cx-R).attr('y',cy-R+i*R*.5).attr('width',R*2).attr('height',R*.48)
+        .attr('fill',`rgba(100,220,230,${.05+i*.03})`);
+    }
+    g.append('ellipse').attr('cx',cx).attr('cy',cy-R+R*.1).attr('rx',R*.2).attr('ry',R*.07).attr('fill','rgba(255,255,255,.25)');
+  } else if(p.style==='deep'){
+    g.append('ellipse').attr('cx',cx-.08*R).attr('cy',cy+.08*R).attr('rx',R*.26).attr('ry',R*.17).attr('fill','rgba(10,20,100,.55)');
+    for(let i=0;i<3;i++){
+      g.append('rect').attr('x',cx-R).attr('y',cy-R*.35+i*R*.36).attr('width',R*2).attr('height',R*.18)
+        .attr('fill','rgba(45,55,145,.22)');
+    }
+  } else if(p.style==='rings'){
+    [[0,.26],[.18,.22],[.06,.25]].forEach(([off,op],i)=>{
+      g.append('rect').attr('x',cx-R).attr('y',cy-R+(i+off)*R*.6).attr('width',R*2).attr('height',R*.25)
+        .attr('fill',`rgba(210,185,140,${op})`);
+    });
+  }
+}
+
+/* ─────────────────────────────────────────
+   RENDER DETAIL SVGs (once visible via IntersectionObserver)
+───────────────────────────────────────── */
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      const section = entry.target;
+      const p = PLANETS.find(x=>x.id===section.id);
+      if(p){
+        const svgEl = document.getElementById(`detail-svg-${p.id}`);
+        if(svgEl && !svgEl.dataset.drawn){
+          svgEl.dataset.drawn='1';
+          drawPlanetSVG(`#detail-svg-${p.id}`, p, 300, 300, `detail-${p.id}`);
         }
+      }
+    }
+  });
+}, {threshold: 0.2});
 
-        // Предотвращаем скролл страницы при взаимодействии с картой
-        map.on('focus', function() {
-            map.scrollWheelZoom.enable();
-        });
-        
-        map.on('blur', function() {
-            map.scrollWheelZoom.disable();
-        });
-    </script>
+document.querySelectorAll('.planet-page').forEach(s=>io.observe(s));
+</script>
 </body>
 </html>
